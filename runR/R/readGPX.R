@@ -17,15 +17,15 @@ readGPX <- function(filepath){
     stop("File: ",filepath," is not a .gpx file.")
   }
 
-  out <- st_read(filepath,
-                 "track_points",
-                 quiet = TRUE)
+  out <- sf::st_read(filepath,
+                     "track_points",
+                     quiet = TRUE)
 
-  out$diff_m <- st_distance(out$geometry,
-                            lag(out$geometry),
-                            by_element=TRUE)
+  out$diff_m <- sf::st_distance(out$geometry,
+                                dplyr::lag(out$geometry),
+                                by_element=TRUE)
 
-  out$diff_sec <- out$time - lag(out$time)
+  out$diff_sec <- out$time - dplyr::lag(out$time)
 
   out$dist_mi <- ifelse(is.na(out$diff_m),
                         0,

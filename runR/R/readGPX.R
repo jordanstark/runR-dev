@@ -1,6 +1,6 @@
 #' Function to read in .gpx file and calculate time and distance
 #'
-#' @param filepath Full path to .gpx file
+#' @param gpx_path Full path to .gpx file
 #'
 #' @return sf object with added columns relating to distance and time
 #'
@@ -11,13 +11,13 @@
 #'
 
 
-readGPX <- function(filepath){
+readGPX <- function(gpx_path){
 
-  if(!grepl(".gpx$",filepath)){
-    stop("File: ",filepath," is not a .gpx file.")
+  if(!grepl(".gpx$",gpx_path)){
+    stop("File: ",gpx_path," is not a .gpx file.")
   }
 
-  out <- sf::st_read(filepath,
+  out <- sf::st_read(gpx_path,
                      "track_points",
                      quiet = TRUE)
 

@@ -13,6 +13,8 @@
 calcRecords <- function(dat,
                         period = "all"){
 
+
+
   if(period == "all"){
 
     vec_names <- names(dat)[which(grepl("^fastest_",

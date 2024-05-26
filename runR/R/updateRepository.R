@@ -4,6 +4,7 @@
 #' @param summary_file name of summary file (default gpx_summary.csv)
 #' @param mi_dists vector of distances (in miles) to summarize. Default whole numbers 1:25
 #' @param km_dists vector of distances (in km) to summarize. Default whole numbers 1:40
+#' @param drop_longer when TRUE (default) removes columns that are all NA because no records are that long. Note these are retained in the .csv file.
 #' @param create if FALSE (default) and summary_file is not found, the function will stop. If TRUE, a new summary file will be created.
 #' @param verbose if TRUE (default), print a message after each .gpx file is procesed.
 #'
@@ -18,6 +19,7 @@ updateRepository <- function(repository_path,
                              summary_file = "summary_file.csv",
                              mi_dists = 1:25,
                              k_dists = 1:40,
+                             drop_longer = TRUE,
                              create = FALSE,
                              verbose = TRUE){
 
@@ -65,35 +67,56 @@ updateRepository <- function(repository_path,
 
     if(length(new_paths) == 0){
       message("No new .gpx files found. Summary file is up to date.")
+    } else{
 
-      return(dat)
+      for(i in 1:length(new_paths)){
 
-      break
+        dat <- dat |>
+          rbind(processGPX(new_paths[i],
+                           mi_dists = mi_dists,
+                           k_dists = k_dists))
+
+        if(verbose){
+          print(paste0(i," of ",length(new_paths)," completed"))
+        }
+
+
+        dat$day <- as.Date(dat$day)
+        dat <- dat[order(dat$day),]
+
+
+        write.csv(dat,
+                  paste0(repository_path,summary_file),
+                  row.names = FALSE)
+
+
+      }
+
+
     }
   }
 
 
 
-  for(i in 1:length(new_paths)){
+  if(isTRUE(drop_longer)){
+    max_mi <- ceiling(max(dat$total_dist_mi))
+    max_k <- ceiling(max(dat$total_dist_mi)*1.609)
 
-    dat <- dat |>
-     rbind(processGPX(new_paths[i],
-                      mi_dists = mi_dists,
-                      k_dists = k_dists))
+    over_mi <- paste0("_",
+                      max_mi:max(mi_dists),
+                      "mi$",
+                      collapse="|")
+    over_k <- paste0("_",
+                     max_k:max(k_dists),
+                     "k$",
+                     collapse="|")
 
-    if(verbose){
-      print(paste0(i," of ",length(new_paths)," completed"))
-    }
+    dat <- dat[,-which(grepl(over_mi,names(dat)))]
+    dat <- dat[,-which(grepl(over_k,names(dat)))]
+
 
   }
 
-  dat$day <- as.Date(dat$day)
-  dat <- dat[order(dat$day),]
-
-
-  write.csv(dat,
-            paste0(repository_path,summary_file),
-            row.names = FALSE)
 
   return(dat)
 

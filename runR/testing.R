@@ -1,5 +1,6 @@
 #### test script - runR
 
+devtools::load_all()
 
 
 gpxrepo <- "C:/Users/jorda/Desktop/Running/gpx_repo/"

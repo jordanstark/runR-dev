@@ -51,6 +51,8 @@ updateRepository <- function(repository_path,
   } else{
 
     dat <- read.csv(paste0(repository_path,summary_file))
+    dat$day <- as.Date(dat$day)
+    dat <- dat[order(dat$day),]
 
     existing_filepaths <- dat$filename
 
@@ -85,6 +87,8 @@ updateRepository <- function(repository_path,
 
   }
 
+  dat$day <- as.Date(dat$day)
+  dat <- dat[order(dat$day),]
 
 
   write.csv(dat,

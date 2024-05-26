@@ -2,9 +2,13 @@
 #'
 #' @param repository_path folder containing .gpx files and gpx_summary file
 #' @param summary_file name of summary file (default gpx_summary.csv)
+#' @param mi_dists vector of distances (in miles) to summarize. Default whole numbers 1:25
+#' @param km_dists vector of distances (in km) to summarize. Default whole numbers 1:40
+#' @param create if FALSE (default) and summary_file is not found, the function will stop. If TRUE, a new summary file will be created.
+#' @param verbose if TRUE (default), print a message after each .gpx file is procesed.
 #'
 #'
-#
+#' @returns data frame containing summary of .gpx files. As a side effect, saves this as summary_file.csv. Only updates new files to save time.
 #'
 #' @export
 #'
@@ -12,10 +16,13 @@
 
 updateRepository <- function(repository_path,
                              summary_file = "summary_file.csv",
-                             create = TRUE){
+                             mi_dists = 1:25,
+                             k_dists = 1:40,
+                             create = FALSE,
+                             verbose = TRUE){
 
   if(isFALSE(create) &
-     !exists(paste0(repository_path,summary_file))){
+     !file.exists(paste0(repository_path,summary_file))){
 
     stop(summary_file,
          " was not found in repository located in ",
@@ -24,16 +31,66 @@ updateRepository <- function(repository_path,
          " to initiate a new repository")
 
   } else if(isTRUE(create) &
-            !exists(paste0(repository_path,summary_file))){
+            !file.exists(paste0(repository_path,summary_file))){
 
-    dat <- data.frame()
+    message("Existing summary file was not found. New summary file: ",
+            summary_file,
+            " is being created.")
+
+    dat <- NULL
+
+    existing_paths <- NULL
+    new_paths <- list.files(repository_path,
+                            pattern=".gpx",
+                            full.names = TRUE)
+
+    if(length(new_paths) == 0){
+      stop("No .gpx files found in repository: ",repository_path)
+    }
 
   } else{
 
     dat <- read.csv(paste0(repository_path,summary_file))
 
+    existing_filepaths <- dat$filename
+
+    paths <- list.files(repository_path,
+                        pattern=".gpx",
+                        full.names = TRUE)
+
+
+    new_paths <- paths[! basename(paths) %in% existing_filepaths]
+
+    if(length(new_paths) == 0){
+      message("No new .gpx files found. Summary file is up to date.")
+
+      return(dat)
+
+      break
+    }
   }
 
-  ## create summary including check for records
+
+
+  for(i in 1:length(new_paths)){
+
+    dat <- dat |>
+     rbind(processGPX(new_paths[i],
+                      mi_dists = mi_dists,
+                      k_dists = k_dists))
+
+    if(verbose){
+      print(paste0(i," of ",length(new_paths)," completed"))
+    }
+
+  }
+
+
+
+  write.csv(dat,
+            paste0(repository_path,summary_file),
+            row.names = FALSE)
+
+  return(dat)
 
 }
